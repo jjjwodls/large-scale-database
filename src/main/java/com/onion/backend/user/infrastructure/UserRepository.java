@@ -1,6 +1,6 @@
-package com.onion.backend.repository;
+package com.onion.backend.user.infrastructure;
 
-import com.onion.backend.entity.User;
+import com.onion.backend.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

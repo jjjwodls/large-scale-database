@@ -1,21 +1,25 @@
-package com.onion.backend.service;
+package com.onion.backend.user.service;
 
-import com.onion.backend.entity.User;
-import com.onion.backend.repository.UserRepository;
+import com.onion.backend.user.domain.User;
+import com.onion.backend.user.infrastructure.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -26,17 +30,14 @@ public class UserService {
      * @return the created User entity
      */
     public User createUser(String username, String email, String password) {
-        // Check if a user with the email already exists
         if (userRepository.findByEmail(email).isPresent()) {
             throw new IllegalArgumentException("User with this email already exists.");
         }
 
-        // Create a new user and set initial values
-        User newUser = new User(email, password);
+        User newUser = new User(email, passwordEncoder.encode(password));
         newUser.setUsername(username);
         newUser.setLastLogin(LocalDateTime.now()); // Optionally, set last login on creation
 
-        // Save the new user to the database
         return userRepository.save(newUser);
     }
 
@@ -50,5 +51,9 @@ public class UserService {
         } else {
             throw new IllegalArgumentException("User not found.");
         }
+    }
+
+    public List<User> getUsers(){
+        return userRepository.findAll();
     }
 }

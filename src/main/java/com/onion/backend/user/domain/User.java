@@ -1,4 +1,4 @@
-package com.onion.backend.entity;
+package com.onion.backend.user.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
