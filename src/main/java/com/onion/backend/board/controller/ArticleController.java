@@ -53,4 +53,9 @@ public class ArticleController {
         EditArticleDto editArticleDto = new EditArticleDto(boardId, editArticleRequest.getTitle(), editArticleRequest.getContent(), userDetails.getUsername());
         return ResponseEntity.ok(articleService.editArticle(editArticleDto, articleId));
     }
+
+    @DeleteMapping("/articles/{articleId}")
+    public ResponseEntity<Long> deleteArticle(@PathVariable Long articleId){
+        return ResponseEntity.ok(articleService.deleteArticle(articleId));
+    }
 }

@@ -4,6 +4,9 @@ import com.onion.backend.exception.ResourceNotFoundException;
 import com.onion.backend.user.domain.User;
 import com.onion.backend.user.infrastructure.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -60,5 +63,13 @@ public class UserService {
 
     public User findByUsername(String username){
         return userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("user not found"));
+    }
+
+    public User userBySecurityContext(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+        String username = userDetails.getUsername();
+        return findByUsername(username);
     }
 }

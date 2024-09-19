@@ -47,7 +47,7 @@ public class ArticleService {
             throw new ResourceNotFoundException("board not found");
         }
 
-        if(!isCanWriteArticle()){
+        if (!isCanWriteArticle()) {
             throw new RateLimitException("article not write by rate limit");
         }
 
@@ -102,15 +102,15 @@ public class ArticleService {
 
         Article article = getArticle(articleId, user);
 
-        if(!isCanEditArticle()){
+        if (!isCanEditArticle()) {
             throw new RateLimitException("article not edited by rate limit");
         }
 
-        if(editArticleDto.getTitle().isPresent()){
+        if (editArticleDto.getTitle().isPresent()) {
             article.setTitle(editArticleDto.getTitle().get());
         }
 
-        if(editArticleDto.getContent().isPresent()){
+        if (editArticleDto.getContent().isPresent()) {
             article.setContent(editArticleDto.getContent().get());
         }
 
@@ -118,23 +118,32 @@ public class ArticleService {
 
     }
 
+    public Long deleteArticle(Long articleId) {
+        User user = userService.userBySecurityContext();
+
+        Article article = getArticle(articleId, user);
+        articleRepository.delete(article);
+
+        if(!isCanEditArticle()){
+            throw new RateLimitException("article not edited by rate limit");
+        }
+
+        return article.getId();
+    }
+
     private Article getArticle(Long articleId, User user) {
         return articleRepository.findByIdAndAuthorId(articleId, user.getId()).orElseThrow(() -> new ResourceNotFoundException("article not found"));
     }
 
-    private boolean isCanWriteArticle(){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
-        String username = userDetails.getUsername();
-        User user = userService.findByUsername(username);
+    private boolean isCanWriteArticle() {
+        User user = userService.userBySecurityContext();
 
         Article article = articleRepository.findTopByAuthorIdOrderByCreatedAtDesc(user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("article not found"));
         return isMoreThanFiveMinutesApart(article.getCreatedAt());
     }
 
-    private boolean isCanEditArticle(){
+    private boolean isCanEditArticle() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
@@ -144,7 +153,7 @@ public class ArticleService {
         Article article = articleRepository.findTopByAuthorIdOrderByUpdatedAtDesc(user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("article not found"));
 
-        if(article.getUpdatedAt() == null){
+        if (article.getUpdatedAt() == null) {
             return true;
         }
         return isMoreThanFiveMinutesApart(article.getUpdatedAt());
