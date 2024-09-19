@@ -1,5 +1,6 @@
 package com.onion.backend.user.service;
 
+import com.onion.backend.exception.ResourceNotFoundException;
 import com.onion.backend.user.domain.User;
 import com.onion.backend.user.infrastructure.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,5 +56,9 @@ public class UserService {
 
     public List<User> getUsers(){
         return userRepository.findAll();
+    }
+
+    public User findByUsername(String username){
+        return userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("user not found"));
     }
 }

@@ -1,39 +1,40 @@
-package com.onion.backend.user.domain;
+package com.onion.backend.board.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.onion.backend.user.domain.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString
-@Entity
-@Table(name = "users")  // You can change the table name as needed
-public class User {
+public class Article {
+
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO) // Auto-incremented ID
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String username;
+    private String title;
 
-    @Column(nullable = false)  // Email must be unique
-    private String email;
-
+    @Lob
     @Column(nullable = false)
-    @JsonIgnore
-    private String password;
+    private String content;
 
-    private LocalDateTime lastLogin;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    private User author;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    private Board board;
 
     @CreatedDate
     @Column(insertable = true)
@@ -41,14 +42,6 @@ public class User {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
-
-    // Other business logic or methods can go here
-
-    // Constructor for creating a new user (email, password)
-    public User(String email, String password) {
-        this.email = email;
-        this.password = password;
-    }
 
     @PrePersist
     protected void onCreate() {
