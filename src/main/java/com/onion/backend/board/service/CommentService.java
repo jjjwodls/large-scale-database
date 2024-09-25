@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -156,5 +157,22 @@ public class CommentService {
         Duration duration = Duration.between(time, now);
 
         return duration.toMinutes() >= 1;
+    }
+
+    public ArticleDetailResponse getArticle(Long boardId, Long articleId){
+        Optional<Board> board = boardRepository.findById(boardId);
+        if (board.isEmpty()) {
+            throw new ResourceNotFoundException("board not found");
+        }
+        Article article = articleService.findById(articleId);
+        List<Comment> comments = findByArticleId(articleId);
+
+        article.setComments(comments);
+
+        return ArticleDetailResponse.toResponse(article);
+    }
+
+    public List<Comment> findByArticleId(Long articleId){
+        return commentRepository.findByArticleId(articleId);
     }
 }

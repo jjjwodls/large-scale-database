@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CommentResponse {
 
-    private Long id;
+    private Long commnetId;
     private String content;
 }

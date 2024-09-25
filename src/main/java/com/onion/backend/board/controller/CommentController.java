@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/boards/{boardId}/articles/{articleId}")
+@RequestMapping("/boards/{boardId}/articles/{articleId}/")
 public class CommentController {
 
     private final CommentService commentService;
@@ -23,7 +23,7 @@ public class CommentController {
     }
 
 
-    @PostMapping("/comments")
+    @PostMapping("comments")
     public ResponseEntity<CommentResponse> writeArticle(@PathVariable Long boardId,@PathVariable Long articleId, @RequestBody WriteCommentRequest writeCommentRequest) {
         WriteCommentDto writeCommentDto = new WriteCommentDto(boardId, articleId, writeCommentRequest.getContent());
         return ResponseEntity.ok(commentService.writeComment(writeCommentDto));
@@ -44,13 +44,18 @@ public class CommentController {
 //        return ResponseEntity.ok(articleService.firstGetArticle(boardId));
 //    }
 
+    @GetMapping("comments")
+    public ResponseEntity<ArticleDetailResponse> articleDetail(@PathVariable Long boardId,@PathVariable Long articleId){
+        return ResponseEntity.ok(commentService.getArticle(boardId, articleId));
+    }
+
     @PutMapping("comments/{commentId}")
     public ResponseEntity<CommentResponse> editArticle(@PathVariable Long articleId,@PathVariable Long commentId, @RequestBody EditCommentRequest editCommentRequest) {
         EditCommentDto editCommentDto = new EditCommentDto(articleId, editCommentRequest.getContent());
         return ResponseEntity.ok(commentService.editComment(editCommentDto, commentId));
     }
 
-    @DeleteMapping("/comments/{commentId}")
+    @DeleteMapping("comments/{commentId}")
     public ResponseEntity<Long> deleteArticle(@PathVariable Long commentId){
         return ResponseEntity.ok(commentService.deleteComment(commentId));
     }
