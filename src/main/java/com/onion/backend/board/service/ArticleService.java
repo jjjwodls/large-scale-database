@@ -41,6 +41,7 @@ public class ArticleService {
         this.userService = userService;
     }
 
+    @Transactional
     public Article writeArticle(WriteArticleDto writeArticleDto) {
         Optional<Board> board = boardRepository.findById(writeArticleDto.getBoardId());
         if (board.isEmpty()) {
@@ -100,7 +101,7 @@ public class ArticleService {
 
         User user = userService.findByUsername(username);
 
-        Article article = getArticle(articleId, user);
+        Article article = findByIdAndAuthorId(articleId, user);
 
         if (!isCanEditArticle()) {
             throw new RateLimitException("article not edited by rate limit");
@@ -121,7 +122,7 @@ public class ArticleService {
     public Long deleteArticle(Long articleId) {
         User user = userService.userBySecurityContext();
 
-        Article article = getArticle(articleId, user);
+        Article article = findByIdAndAuthorId(articleId, user);
         articleRepository.delete(article);
 
         if(!isCanEditArticle()){
@@ -131,8 +132,12 @@ public class ArticleService {
         return article.getId();
     }
 
-    private Article getArticle(Long articleId, User user) {
+    public Article findByIdAndAuthorId(Long articleId, User user) {
         return articleRepository.findByIdAndAuthorId(articleId, user.getId()).orElseThrow(() -> new ResourceNotFoundException("article not found"));
+    }
+
+    public Article findById(Long articleId){
+        return articleRepository.findById(articleId).orElseThrow(() -> new ResourceNotFoundException("article not found"));
     }
 
     private boolean isCanWriteArticle() {
