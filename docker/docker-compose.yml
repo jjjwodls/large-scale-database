@@ -1,0 +1,17 @@
+services:
+  mysql-db:
+    image: mysql:5.7  # MySQL 5.7 버전으로 설정합니다.
+    platform: linux/amd64  # amd64 플랫폼으로 설정합니다.
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: onion1!
+      MYSQL_DATABASE: onion-db
+      MYSQL_USER: onion-user  # 추가 사용자 이름입니다.
+      MYSQL_PASSWORD: onion1!
+    ports:
+      - "3306:3306"  # 로컬 포트 3306을 컨테이너의 포트 3306에 매핑합니다.
+    volumes:
+      - db_data:/var/lib/mysql  # MySQL 데이터를 호스트에 영구 저장합니다.
+
+volumes:
+  db_data:
