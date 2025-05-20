@@ -1,5 +1,6 @@
 package com.onion.backend.board.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.onion.backend.board.domain.Article;
 import com.onion.backend.board.domain.Board;
 import com.onion.backend.board.domain.Comment;
@@ -10,6 +11,7 @@ import com.onion.backend.exception.RateLimitException;
 import com.onion.backend.exception.ResourceNotFoundException;
 import com.onion.backend.user.domain.User;
 import com.onion.backend.user.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class CommentService {
 
     private final BoardRepository boardRepository;
@@ -32,15 +35,7 @@ public class CommentService {
 
     private final ArticleService articleService;
 
-    public CommentService(BoardRepository boardRepository, ArticleService articleService,
-                          UserService userService,
-                          CommentRepository commentRepository) {
-        this.boardRepository = boardRepository;
-        this.articleService = articleService;
-        this.userService = userService;
-        this.commentRepository = commentRepository;
-    }
-
+    private final ElasticSearchArticleService elasticSearchArticleService;
     @Transactional
     public CommentResponse writeComment(WriteCommentDto writeCommentDto) {
         Optional<Board> board = boardRepository.findById(writeCommentDto.getBoardId());
@@ -159,7 +154,7 @@ public class CommentService {
         return duration.toMinutes() >= 1;
     }
 
-    public ArticleDetailResponse getArticle(Long boardId, Long articleId){
+    public ArticleDetailResponse getArticle(Long boardId, Long articleId) throws JsonProcessingException {
         Optional<Board> board = boardRepository.findById(boardId);
         if (board.isEmpty()) {
             throw new ResourceNotFoundException("board not found");
@@ -168,6 +163,9 @@ public class CommentService {
         List<Comment> comments = findByArticleId(articleId);
 
         article.setComments(comments);
+        article.setViewCount(article.getViewCount()+1);
+
+        elasticSearchArticleService.indexEditArticleDocument("article", articleId, article);
 
         return ArticleDetailResponse.toResponse(article);
     }
@@ -175,4 +173,11 @@ public class CommentService {
     public List<Comment> findByArticleId(Long articleId){
         return commentRepository.findByArticleId(articleId);
     }
+
+    private boolean isOwnerComment(Comment comment, User user){
+        return comment.getAuthor().getId().equals(user.getId());
+    }
+
 }
+
+

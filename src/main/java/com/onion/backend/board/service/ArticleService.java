@@ -1,5 +1,7 @@
 package com.onion.backend.board.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onion.backend.board.domain.Article;
 import com.onion.backend.board.domain.Board;
 import com.onion.backend.board.dto.ArticleResponse;
@@ -12,6 +14,7 @@ import com.onion.backend.exception.ResourceNotFoundException;
 import com.onion.backend.user.domain.User;
 import com.onion.backend.user.infrastructure.UserRepository;
 import com.onion.backend.user.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,6 +29,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ArticleService {
 
     private final BoardRepository boardRepository;
@@ -34,15 +38,9 @@ public class ArticleService {
 
     private final UserService userService;
 
-    public ArticleService(BoardRepository boardRepository, ArticleRepository articleRepository,
-                          UserService userService) {
-        this.boardRepository = boardRepository;
-        this.articleRepository = articleRepository;
-        this.userService = userService;
-    }
-
+    private final ElasticSearchArticleService elasticSearchArticleService;
     @Transactional
-    public Article writeArticle(WriteArticleDto writeArticleDto) {
+    public Article writeArticle(WriteArticleDto writeArticleDto) throws JsonProcessingException {
         Optional<Board> board = boardRepository.findById(writeArticleDto.getBoardId());
         if (board.isEmpty()) {
             throw new ResourceNotFoundException("board not found");
@@ -62,6 +60,7 @@ public class ArticleService {
         article.setTitle(writeArticleDto.getTitle());
         article.setContent(writeArticleDto.getContent());
         articleRepository.save(article);
+        elasticSearchArticleService.indexArticleDocument("article", article);
 
         return article;
     }
@@ -91,7 +90,7 @@ public class ArticleService {
     }
 
     @Transactional()
-    public ArticleResponse editArticle(EditArticleDto editArticleDto, Long articleId) {
+    public ArticleResponse editArticle(EditArticleDto editArticleDto, Long articleId) throws JsonProcessingException {
         Optional<Board> board = boardRepository.findById(editArticleDto.getBoardId());
         if (board.isEmpty()) {
             throw new ResourceNotFoundException("board not found");
@@ -114,7 +113,7 @@ public class ArticleService {
         if (editArticleDto.getContent().isPresent()) {
             article.setContent(editArticleDto.getContent().get());
         }
-
+        elasticSearchArticleService.indexEditArticleDocument("article", articleId, article);
         return new ArticleResponse(article.getId(), article.getTitle(), article.getContent());
 
     }
@@ -143,9 +142,10 @@ public class ArticleService {
     private boolean isCanWriteArticle() {
         User user = userService.userBySecurityContext();
 
-        Article article = articleRepository.findTopByAuthorIdOrderByCreatedAtDesc(user.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("article not found"));
-        return isMoreThanFiveMinutesApart(article.getCreatedAt());
+        Optional<Article> article = articleRepository.findTopByAuthorIdOrderByCreatedAtDesc(user.getId());
+
+        return article.map(value -> isMoreThanFiveMinutesApart(value.getCreatedAt())).orElse(true);
+
     }
 
     private boolean isCanEditArticle() {
@@ -172,6 +172,15 @@ public class ArticleService {
         Duration duration = Duration.between(time, now);
 
         // 차이가 5분(300초) 이상이면 true 반환
-        return duration.toMinutes() >= 5;
+        return duration.toMinutes() >= 1;
+    }
+
+    @Transactional
+    public Article getArticleByIdAndBoardId(Long articleId, Long boardId){
+        Article article = articleRepository.findByIdAndBoardId(articleId, boardId).orElseThrow(() -> new ResourceNotFoundException("articleId = " + articleId + " and boardId = " + boardId + " is not found"));
+        article.setViewCount(article.getViewCount() + 1);
+
+        return article;
+
     }
 }

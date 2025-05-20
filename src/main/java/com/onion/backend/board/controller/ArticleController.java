@@ -1,8 +1,11 @@
 package com.onion.backend.board.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.onion.backend.board.domain.Article;
 import com.onion.backend.board.dto.*;
 import com.onion.backend.board.service.ArticleService;
+import com.onion.backend.board.service.ElasticSearchArticleService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,17 +15,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 public class ArticleController {
 
     private final ArticleService articleService;
 
-    public ArticleController(ArticleService articleService) {
-        this.articleService = articleService;
-    }
 
 
     @PostMapping("/{boardId}/articles")
-    public ResponseEntity<Article> writeArticle(@PathVariable Long boardId, @RequestBody WriteArticleRequest writeArticleRequest) {
+    public ResponseEntity<Article> writeArticle(@PathVariable Long boardId, @RequestBody WriteArticleRequest writeArticleRequest) throws JsonProcessingException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
@@ -46,7 +47,7 @@ public class ArticleController {
     }
 
     @PutMapping("/{boardId}/articles/{articleId}")
-    public ResponseEntity<ArticleResponse> editArticle(@PathVariable Long boardId,@PathVariable Long articleId, @RequestBody EditArticleRequest editArticleRequest) {
+    public ResponseEntity<ArticleResponse> editArticle(@PathVariable Long boardId,@PathVariable Long articleId, @RequestBody EditArticleRequest editArticleRequest) throws JsonProcessingException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
@@ -57,5 +58,11 @@ public class ArticleController {
     @DeleteMapping("/articles/{articleId}")
     public ResponseEntity<Long> deleteArticle(@PathVariable Long articleId){
         return ResponseEntity.ok(articleService.deleteArticle(articleId));
+    }
+
+    @GetMapping("/{boardId}/articles/{articleId}")
+    public ResponseEntity<ArticleResponse> getArticle(@PathVariable Long articleId, @PathVariable Long boardId){
+        return ResponseEntity.ok(
+                ArticleResponse.from(articleService.getArticleByIdAndBoardId(articleId, boardId)));
     }
 }

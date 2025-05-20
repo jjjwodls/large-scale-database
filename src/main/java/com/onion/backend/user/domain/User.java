@@ -26,7 +26,7 @@ public class User {
     @Column(nullable = false)
     private String username;
 
-    @Column(nullable = false)  // Email must be unique
+    @Column(nullable = false, unique = true)  // Email must be unique
     private String email;
 
     @Column(nullable = false)

@@ -32,4 +32,6 @@ public interface ArticleRepository extends JpaRepository<Article,Long> {
     Optional<Article> findTopByAuthorIdOrderByCreatedAtDesc(Long authorId);
 
     Optional<Article> findTopByAuthorIdOrderByUpdatedAtDesc(Long authorId);
+
+    Optional<Article> findByIdAndBoardId(Long articleId, Long boardId);
 }

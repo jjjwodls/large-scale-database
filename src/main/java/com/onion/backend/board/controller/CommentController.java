@@ -1,16 +1,10 @@
 package com.onion.backend.board.controller;
 
-import com.onion.backend.board.domain.Article;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.onion.backend.board.dto.*;
-import com.onion.backend.board.service.ArticleService;
 import com.onion.backend.board.service.CommentService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/boards/{boardId}/articles/{articleId}/")
@@ -45,12 +39,12 @@ public class CommentController {
 //    }
 
     @GetMapping("comments")
-    public ResponseEntity<ArticleDetailResponse> articleDetail(@PathVariable Long boardId,@PathVariable Long articleId){
+    public ResponseEntity<ArticleDetailResponse> articleDetail(@PathVariable Long boardId,@PathVariable Long articleId) throws JsonProcessingException {
         return ResponseEntity.ok(commentService.getArticle(boardId, articleId));
     }
 
     @PutMapping("comments/{commentId}")
-    public ResponseEntity<CommentResponse> editArticle(@PathVariable Long articleId,@PathVariable Long commentId, @RequestBody EditCommentRequest editCommentRequest) {
+    public ResponseEntity<CommentResponse> editComment(@PathVariable Long articleId,@PathVariable Long commentId, @RequestBody EditCommentRequest editCommentRequest) {
         EditCommentDto editCommentDto = new EditCommentDto(articleId, editCommentRequest.getContent());
         return ResponseEntity.ok(commentService.editComment(editCommentDto, commentId));
     }
