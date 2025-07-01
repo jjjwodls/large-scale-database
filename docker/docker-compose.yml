@@ -58,8 +58,21 @@ services:
       - "5044:5044"
       - "9600:9600"  # Logstash monitoring API
 
+  mongodb:
+    image: mongo:7
+    restart: always
+    # 인증을 사용하고 싶으시면 아래 두 줄을 활성화하세요.
+    # environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root
+    #   MONGO_INITDB_ROOT_PASSWORD: onion1!
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
 volumes:
   db_data:
   es-data:
     driver: local
+  mongo_data:
 

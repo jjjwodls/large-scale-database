@@ -1,0 +1,57 @@
+spring:
+  application:
+    name : backend
+  datasource:
+    url: jdbc:mysql://localhost:3306/onion-db
+    username: onion-user
+    password: onion1!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      pool-name: HikariCP
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQLDialect
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: never
+    properties:
+      org:
+        quartz:
+          scheduler:
+            instanceId: AUTO
+          jobStore:
+            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+            useProperties: false
+            tablePrefix: QRTZ_
+            misfireThreshold: 60000
+            clusterCheckinInterval: 1000
+            isClustered: true
+          threadPool:
+            class: org.quartz.simpl.SimpleThreadPool
+            threadCount: 10
+            threadPriority: 5
+            threadsInheritContextClassLoaderOfInitializingThread: true
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui
+
+jwt:
+  secret: b4fa6d273c9047450698fcbafbaab739fc8cb30e5136f624fca309e326be22b8
+  tokenValidity: 36000
+  token-name: onion_access_token
+
